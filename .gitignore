@@ -1,0 +1,5 @@
+src/github.com
+src/launchpad.net
+pkg/*/launchpad.net
+AmySSH
+*.sublime-*
