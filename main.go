@@ -7,12 +7,10 @@ import (
 	"fmt"
 )
 
-func defaultConfig() *AmySSHConfig {
-	return &AmySSHConfig{
-		DatabaseConfig{"localhost", 3306, "root", ""},
-		[]UsersConfig{UsersConfig{"deployer", []string{"deploy", "all"}}},
-		[]string{"default"},
-	}
+var defaultConfig = AmySSHConfig{
+	DatabaseConfig{"localhost", 3306, "root", ""},
+	[]UsersConfig{UsersConfig{"deployer", []string{"deploy", "admin"}, []string{}}},
+	[]string{"default"},
 }
 
 type DatabaseConfig struct {
@@ -24,6 +22,7 @@ type DatabaseConfig struct {
 type UsersConfig struct {
 	Name string
 	Tags []string
+	Keys []string
 }
 type AmySSHConfig struct {
 	Database DatabaseConfig
@@ -32,16 +31,15 @@ type AmySSHConfig struct {
 }
 
 func main() {
-	defaultCfg := *defaultConfig()
-	config.Initialize(defaultCfg)
+	config.Initialize(defaultConfig)
 
 	options := config.Options().(*AmySSHConfig)
 
 	flag.StringVar(config.ConfigFilePath(), "f", "/etc/amyssh.yml", "config file location")
-	flag.UintVar(&options.Database.Port, "dbport", defaultCfg.Database.Port, "database port")
-	flag.StringVar(&options.Database.Host, "dbhost", defaultCfg.Database.Host, "database host")
-	flag.StringVar(&options.Database.User, "dbuser", defaultCfg.Database.User, "database user")
-	flag.StringVar(&options.Database.Password, "dbpassword", defaultCfg.Database.Password, "database password")
+	flag.UintVar(&options.Database.Port, "dbport", defaultConfig.Database.Port, "database port")
+	flag.StringVar(&options.Database.Host, "dbhost", defaultConfig.Database.Host, "database host")
+	flag.StringVar(&options.Database.User, "dbuser", defaultConfig.Database.User, "database user")
+	flag.StringVar(&options.Database.Password, "dbpassword", defaultConfig.Database.Password, "database password")
 	flag.Parse()
 	fmt.Printf("%+v\n", config.Config().(AmySSHConfig))
 }
