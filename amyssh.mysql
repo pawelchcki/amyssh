@@ -7,7 +7,7 @@ CREATE TABLE `keys` (
   `key` text NOT NULL,
   `owner_name` text NOT NULL,
   PRIMARY KEY (`key_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8$$
+) ENGINE=InnoDB DEFAULT CHARSET=utf8$$
 CREATE TABLE `host_tags` (
   `host_tag_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `label` varchar(64) NOT NULL,
@@ -15,12 +15,12 @@ CREATE TABLE `host_tags` (
   PRIMARY KEY (`host_tag_id`),
   KEY `fk_host_tags_1` (`key_id`),
   CONSTRAINT `fk_host_tags_1` FOREIGN KEY (`key_id`) REFERENCES `keys` (`key_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8$$
-CREATE TABLE `user_tags` (
-  `user_tag_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+) ENGINE=InnoDB DEFAULT CHARSET=utf8$$
+CREATE TABLE `user_host_tags` (
+  `user_host_tag_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `label` varchar(64) NOT NULL,
-  `key_id` int(11) unsigned NOT NULL,
-  PRIMARY KEY (`user_tag_id`),
-  KEY `fk_user_tags_1` (`key_id`),
-  CONSTRAINT `fk_user_tags_1` FOREIGN KEY (`key_id`) REFERENCES `keys` (`key_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8$$
+  `host_tag_id` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`user_host_tag_id`),
+  KEY `fk_user_host_tags_1` (`host_tag_id`),
+  CONSTRAINT `fk_user_host_tags_1` FOREIGN KEY (`host_tag_id`) REFERENCES `host_tags` (`host_tag_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
