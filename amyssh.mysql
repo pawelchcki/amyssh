@@ -2,18 +2,25 @@
 delimiter $$
 CREATE DATABASE `amyssh` /*!40100 DEFAULT CHARACTER SET utf8 */$$
 USE `amyssh`$$
-CREATE TABLE `ssh_keys` (
-  `idssh_keys` int(11) unsigned NOT NULL AUTO_INCREMENT,
+CREATE TABLE `keys` (
+  `key_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `key` text NOT NULL,
   `owner_name` text NOT NULL,
-  PRIMARY KEY (`idssh_keys`)
+  PRIMARY KEY (`key_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8$$
-CREATE TABLE `tags` (
-  `idhost_tags` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `label` varchar(45) NOT NULL,
-  `idssh_keys` int(11) unsigned NOT NULL,
-  `type` varchar(45) NOT NULL,
-  PRIMARY KEY (`idhost_tags`),
-  KEY `fk_host_tags_1` (`idssh_keys`),
-  CONSTRAINT `fk_host_tags_1` FOREIGN KEY (`idssh_keys`) REFERENCES `ssh_keys` (`idssh_keys`) ON DELETE CASCADE ON UPDATE CASCADE
+CREATE TABLE `host_tags` (
+  `host_tag_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `label` varchar(64) NOT NULL,
+  `key_id` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`host_tag_id`),
+  KEY `fk_host_tags_1` (`key_id`),
+  CONSTRAINT `fk_host_tags_1` FOREIGN KEY (`key_id`) REFERENCES `keys` (`key_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8$$
+CREATE TABLE `user_tags` (
+  `user_tag_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `label` varchar(64) NOT NULL,
+  `key_id` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`user_tag_id`),
+  KEY `fk_user_tags_1` (`key_id`),
+  CONSTRAINT `fk_user_tags_1` FOREIGN KEY (`key_id`) REFERENCES `keys` (`key_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8$$
