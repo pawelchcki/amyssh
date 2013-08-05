@@ -17,5 +17,11 @@ func main() {
 	flag.StringVar(&options.Database.User, "dbuser", amyssh.DefaultConfig.Database.User, "database user")
 	flag.StringVar(&options.Database.Password, "dbpassword", amyssh.DefaultConfig.Database.Password, "database password")
 	flag.Parse()
-	fmt.Printf("%+v\n", configurator.Config().(amyssh.Config))
+	cfg := configurator.Config().(amyssh.Config)
+	fmt.Printf("%+v\n", cfg)
+
+	db := amyssh.NewCon(cfg)
+	hostTags := []string{"all", "s-rt", "staging"}
+
+	amyssh.Show(db.FetchKeys(hostTags, hostTags))
 }
