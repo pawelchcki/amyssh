@@ -2,7 +2,6 @@ package amyssh
 
 import (
 	"fmt"
-	"strings"
 
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
@@ -29,37 +28,62 @@ func NewCon(cfg Config) *Connection {
 	return &con
 }
 
-func (con *Connection) FetchKeys(hostTags []string, userTags []string) (keys []string) {
+func generatePlaceholder(count int) string {
+	if count > 0 {
+		maxChars := count*2 - 1
+		buf := make([]byte, maxChars)
+		for i := 0; i < maxChars; i++ {
+			if (i % 2) == 0 {
+				buf[i] = '?'
+			} else {
+				buf[i] = ','
+			}
+
+		}
+		return string(buf[:maxChars])
+	}
+	return ""
+}
+
+type KeyData struct {
+}
+
+func (con *Connection) FetchKeys(hostTags []string, userTags []string) (keys map[string][]string, err error) {
 	// hostTags := []string{"all", "s-rt", "staging"}
 
-	typeParam := "host"
+	// typeParam := "host"
 
 	// TODO: find better way to use prepared statement escaping
-	params := append([]interface{}{typeParam})
-	tagPlaceholders := make([]string, len(hostTags))
-	for i, tag := range hostTags {
-		tagPlaceholders[i] = "?"
-		params = append(params, tag)
+	// params := append(hostTags, userTags...)
+	// paramsLen :=len(hostTags)+len(userTags)
+	hostLen := len(hostTags)
+	params := make([]interface{}, hostLen+len(userTags))
+	for i, v := range hostTags {
+		params[i] = interface{}(v)
+	}
+	for i, v := range userTags {
+		params[i+hostLen] = interface{}(v)
 	}
 
-	query := fmt.Sprintf("SELECT DISTINCT `key` FROM ssh_keys k "+
-		"JOIN tags t ON t.type=? AND t.label IN (%s) AND k.idssh_keys = t.idssh_keys",
-		strings.Join(tagPlaceholders, ","))
+	query := fmt.Sprintf("SELECT DISTINCT k.key_id, k.`key`, u.label FROM `keys` k "+
+		"JOIN host_tags h ON h.label IN (%s) AND k.key_id = h.key_id "+
+		"JOIN user_host_tags u ON u.label IN (%s) AND u.host_tag_id = h.host_tag_id",
+		generatePlaceholder(len(hostTags)), generatePlaceholder(len(userTags)))
 
-	//TODO investigate append on pre 'made' array of some arbitrary size
 	row, err := con.db.Query(query, params...)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	var result []string
-	var key string
+	//TODO: optimise memory usage ?
+	userKeys := make(map[string][]string)
+
+	var id, key, userLabel string
 	for row.Next() {
-		row.Scan(&key)
-		result = append(result, key)
+		row.Scan(&id, &key, &userLabel)
+		userKeys[userLabel] = append(userKeys[userLabel], key)
 	}
-	// Show()
-	return result
+	return userKeys, nil
 }
 
 func Show(v interface{}) {

@@ -21,7 +21,10 @@ func main() {
 	fmt.Printf("%+v\n", cfg)
 
 	db := amyssh.NewCon(cfg)
-	hostTags := []string{"all", "s-rt", "staging"}
+	hostTags := []string{"stage", "prod"}
+	userTags := []string{"admin", "deployer"}
 
-	amyssh.Show(db.FetchKeys(hostTags, hostTags))
+	keys, _ := db.FetchKeys(hostTags, userTags)
+	amyssh.Show(keys)
+
 }
