@@ -58,6 +58,7 @@ func DispatchLoop(cfg *Config) {
 		operation(cfg)
 		duration := time.Since(start)
 		s.adjustInterval(cfg, duration)
+
 		// sleep
 		fuzz := time.Duration(rand.Int63n(100)) * time.Millisecond
 		time.Sleep(s.interval + fuzz)
