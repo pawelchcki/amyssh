@@ -13,47 +13,53 @@ func operation(cfg *Config) {
 	// fmt.Printf("%d\n", time.Duration(rand.Intn(110))*time.Millisecond)
 }
 
+type sleepSchedule struct {
+	interval      time.Duration
+	intervalDelta time.Duration
+}
+
+func (s *sleepSchedule) adjustInterval(cfg *Config, duration time.Duration) {
+	// adjust interval
+	switch {
+	case duration > cfg.BackoffThreshold:
+		s.interval = cfg.MaxPollInterval
+		s.intervalDelta = 100 * time.Millisecond
+
+	case duration <= cfg.PerformanceThreshold:
+		s.interval = s.interval - s.intervalDelta
+		if s.intervalDelta < 20*time.Second {
+			s.intervalDelta = s.intervalDelta * 2
+		} else {
+			s.intervalDelta = 20 * time.Second
+		}
+
+	case duration > cfg.PerformanceThreshold:
+		s.interval = s.interval + s.intervalDelta
+		if s.intervalDelta > 100*time.Millisecond {
+			s.intervalDelta = s.intervalDelta / 2
+		} else {
+			s.intervalDelta = 100 * time.Millisecond
+		}
+	}
+	if s.interval < cfg.MinPollInterval {
+		s.interval = cfg.MinPollInterval
+	}
+	if s.interval > cfg.MaxPollInterval {
+		s.interval = cfg.MaxPollInterval
+	}
+}
+
 func DispatchLoop(cfg *Config) {
-	interval := cfg.MaxPollInterval
-	intervalDelta := 100 * time.Millisecond
+	s := sleepSchedule{cfg.MaxPollInterval, 100 * time.Millisecond}
 
 	for {
 		// Measure operation time
 		start := time.Now()
 		operation(cfg)
 		duration := time.Since(start)
-
-		// adjust interval
-		switch {
-		case duration > cfg.BackoffThreshold:
-			interval = cfg.MaxPollInterval
-			intervalDelta = 100 * time.Millisecond
-
-		case duration <= cfg.PerformanceThreshold:
-			interval = interval - intervalDelta
-			if intervalDelta < 20*time.Second {
-				intervalDelta = intervalDelta * 2
-			} else {
-				intervalDelta = 20 * time.Second
-			}
-
-		case duration > cfg.PerformanceThreshold:
-			interval = interval + intervalDelta
-			if intervalDelta > 100*time.Millisecond {
-				intervalDelta = intervalDelta / 2
-			} else {
-				intervalDelta = 100 * time.Millisecond
-			}
-		}
-		if interval < cfg.MinPollInterval {
-			interval = cfg.MinPollInterval
-		}
-		if interval > cfg.MaxPollInterval {
-			interval = cfg.MaxPollInterval
-		}
-
+		s.adjustInterval(cfg, duration)
 		// sleep
 		fuzz := time.Duration(rand.Int63n(100)) * time.Millisecond
-		time.Sleep(interval + fuzz)
+		time.Sleep(s.interval + fuzz)
 	}
 }
