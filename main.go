@@ -27,4 +27,6 @@ func main() {
 	keys, _ := db.FetchKeys(hostTags, userTags)
 	amyssh.Show(keys)
 
+	amyssh.DispatchLoop(&cfg)
+
 }
