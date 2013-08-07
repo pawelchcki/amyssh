@@ -20,13 +20,13 @@ func main() {
 	cfg := configurator.Config().(amyssh.Config)
 	fmt.Printf("%+v\n", cfg)
 
-	db := amyssh.NewCon(cfg)
-	hostTags := []string{"stage", "prod"}
-	userTags := []string{"admin", "deployer"}
+	// db := amyssh.NewCon(cfg)
+	// hostTags := []string{"stage", "prod"}
+	// userTags := []string{"admin", "deployer"}
 
-	keys, _ := db.FetchKeys(hostTags, userTags)
-	amyssh.Show(keys)
+	// keys, _ := db.FetchKeys(hostTags, userTags)
+	// amyssh.Show(keys)
 
-	amyssh.DispatchLoop(&cfg)
-
+	// amyssh.DispatchLoop(&cfg)
+	amyssh.Perform(&cfg)
 }

@@ -4,7 +4,9 @@ import "time"
 
 var DefaultConfig = Config{
 	DatabaseConfig{"localhost", 3306, "root", "", "amyssh"},
-	[]UsersConfig{UsersConfig{"deployer", []string{"deploy", "admin"}, []string{}}},
+	[]UsersConfig{
+		UsersConfig{"deployer", []string{"deploy", "admin"}, []string{}},
+	},
 	[]string{"default"},
 	100 * time.Millisecond,
 	10000 * time.Millisecond,

@@ -17,15 +17,15 @@ func dbStr(cfg DatabaseConfig) string {
 	return fmt.Sprintf("%s:%s@(%s:%d)/%s", cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.DbName)
 }
 
-func NewCon(cfg Config) *Connection {
+func NewCon(cfg *Config) (*Connection, error) {
 	con := Connection{}
 	var err error
 	con.db, err = sql.Open("mysql", dbStr(cfg.Database))
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return &con
+	return &con, nil
 }
 
 func generatePlaceholder(count int) string {
