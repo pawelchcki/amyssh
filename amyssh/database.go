@@ -75,7 +75,7 @@ func (con *Connection) FetchKeys(hostTags []string, userTags []string) (keys map
 		return nil, err
 	}
 
-	//TODO: optimise memory usage ?
+	//TODO: optimize memory usage ?
 	userKeys := make(map[string][]string)
 
 	var id, key, userLabel string

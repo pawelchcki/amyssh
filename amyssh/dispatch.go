@@ -49,7 +49,7 @@ func (s *sleepSchedule) adjustInterval(cfg *Config, duration time.Duration) {
 	}
 }
 
-func DispatchLoop(cfg *Config, fn func(cfg *Config)) {
+func DispatchLoop(cfg *Config, fn func(cfg *Config) error) {
 	s := sleepSchedule{cfg.MaxPollInterval, 100 * time.Millisecond}
 
 	for {

@@ -4,7 +4,7 @@ import (
 	amyssh "./amyssh"
 	configurator "./configurator"
 	"flag"
-	"fmt"
+	// "fmt"
 )
 
 func main() {
@@ -18,7 +18,6 @@ func main() {
 	flag.StringVar(&options.Database.Password, "dbpassword", amyssh.DefaultConfig.Database.Password, "database password")
 	flag.Parse()
 	cfg := configurator.Config().(amyssh.Config)
-	fmt.Printf("%+v\n", cfg)
 
 	// db := amyssh.NewCon(cfg)
 	// hostTags := []string{"stage", "prod"}

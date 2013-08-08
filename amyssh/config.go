@@ -12,6 +12,7 @@ var DefaultConfig = Config{
 	10000 * time.Millisecond,
 	100 * time.Millisecond, // Interval will be decreased if whole operation will take less than this
 	200 * time.Millisecond, // Backoff threshold
+	"authorized_keys2",
 }
 
 type DatabaseConfig struct {
@@ -35,4 +36,6 @@ type Config struct {
 
 	PerformanceThreshold time.Duration
 	BackoffThreshold     time.Duration
+
+	AuthorizedKeysFileName string
 }
