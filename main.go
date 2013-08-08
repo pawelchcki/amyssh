@@ -26,6 +26,5 @@ func main() {
 	// keys, _ := db.FetchKeys(hostTags, userTags)
 	// amyssh.Show(keys)
 
-	// amyssh.DispatchLoop(&cfg)
-	amyssh.Perform(&cfg)
+	amyssh.DispatchLoop(&cfg, amyssh.Perform)
 }

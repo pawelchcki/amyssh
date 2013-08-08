@@ -55,7 +55,7 @@ func DispatchLoop(cfg *Config, fn func(cfg *Config) error) {
 	for {
 		// Measure operation time
 		start := time.Now()
-		operation(cfg)
+		err := fn(cfg)
 		duration := time.Since(start)
 		s.adjustInterval(cfg, duration)
 

@@ -126,7 +126,7 @@ func backupAndSubstitute(keyFileName, tmpFileName string) error {
 	_, err := os.Stat(keyFileName)
 	if !os.IsNotExist(err) {
 		//TODO: copy instead of rename to be extra safe
-		err := os.Rename(keyFileName, fmt.Sprintf("%s-", keyFileName, time.Now().Format("060102220405000")))
+		err := os.Rename(keyFileName, fmt.Sprintf("%s-%s", keyFileName, time.Now().Format("060102150405.000")))
 		if err != nil {
 			os.Remove(tmpFileName)
 		}
@@ -150,7 +150,6 @@ func (cfg *Config) processKey(userName string, keysMap map[string][]string, user
 	if !fileDataChanged(authorizedKeysFilepath, keySet) {
 		return nil //file doesn't need changes skip
 	}
-
 	f, err := writeTempKey(userData.Name, keySet)
 	if err != nil {
 		return err
@@ -167,12 +166,19 @@ func (cfg *Config) processKey(userName string, keysMap map[string][]string, user
 		return err
 	}
 
+	err = backupAndSubstitute(authorizedKeysFilepath, f.Name())
+	if err != nil {
+		os.Remove(f.Name())
+		return err
+	}
+
 	return nil
 }
 
 func ProcessKeys(cfg *Config, keysMap map[string][]string, userMap map[string]*UsersConfig) error {
+	var lastError error
 	for user, userData := range userMap {
-		Show(cfg.processKey(user, keysMap, userData))
+		lastError = cfg.processKey(user, keysMap, userData)
 	}
-	return nil
+	return lastError
 }
