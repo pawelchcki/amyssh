@@ -1,8 +1,8 @@
 package main
 
 import (
-	amyssh "./amyssh"
 	configurator "./configurator"
+	amyssh "./lib"
 	"flag"
 	// "fmt"
 )
