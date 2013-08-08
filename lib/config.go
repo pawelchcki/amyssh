@@ -18,7 +18,7 @@ var DefaultConfig = Config{
 	},
 	HostTags:               []string{"default"},
 	MinPollInterval:        100 * time.Millisecond,
-	MaxPollInterval:        1200 * time.Millisecond,
+	MaxPollInterval:        10000 * time.Millisecond,
 	PerformanceThreshold:   100 * time.Millisecond, // Interval will be decreased if whole operation will take less than this
 	BackoffThreshold:       200 * time.Millisecond, // Backoff threshold
 	AuthorizedKeysFileName: "authorized_keys2",

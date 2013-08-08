@@ -4,7 +4,7 @@ import (
 	configurator "./configurator"
 	amyssh "./lib"
 	"flag"
-	// "fmt"
+	"log"
 )
 
 func main() {
@@ -12,19 +12,14 @@ func main() {
 	options := configurator.Options().(*amyssh.Config)
 
 	flag.StringVar(configurator.ConfigFilePath(), "f", "/etc/amyssh.yml", "config file location")
-	flag.UintVar(&options.Database.Port, "dbport", amyssh.DefaultConfig.Database.Port, "database port")
-	flag.StringVar(&options.Database.Host, "dbhost", amyssh.DefaultConfig.Database.Host, "database host")
-	flag.StringVar(&options.Database.User, "dbuser", amyssh.DefaultConfig.Database.User, "database user")
-	flag.StringVar(&options.Database.Password, "dbpassword", amyssh.DefaultConfig.Database.Password, "database password")
+	flag.DurationVar(&options.MaxPollInterval, "maxinterval", options.MaxPollInterval, "maximum interval at which datasource will be polled")
+	flag.DurationVar(&options.MinPollInterval, "mininterval", options.MinPollInterval, "minimum interval at which datasource will be polled")
+
 	flag.Parse()
+
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	log.Printf("loading\n")
 	cfg := configurator.Config().(amyssh.Config)
-
-	// db := amyssh.NewCon(cfg)
-	// hostTags := []string{"stage", "prod"}
-	// userTags := []string{"admin", "deployer"}
-
-	// keys, _ := db.FetchKeys(hostTags, userTags)
-	// amyssh.Show(keys)
 
 	amyssh.IntervalLoop(&cfg, amyssh.Perform)
 }

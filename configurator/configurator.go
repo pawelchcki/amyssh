@@ -62,6 +62,7 @@ func (c *ConfigHolder) LoadFromFile(filePath string) {
 		panic(err)
 	}
 }
+
 func (c *ConfigHolder) Config() interface{} {
 	if !c.cachedConfig.IsValid() {
 		c.cachedConfig = reflect.New(c.defaultCfg.Type())

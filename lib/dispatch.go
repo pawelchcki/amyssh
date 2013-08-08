@@ -59,7 +59,8 @@ func IntervalLoop(cfg *Config, fn func(cfg *Config) error) {
 		duration := time.Since(start)
 
 		if err != nil {
-			log.Printf("operation returned error: %+v\n", err)
+			log.Printf("at interval %s operation took %s and returned error: <%+v>\n",
+				s.interval.String(), duration.String(), err)
 			s.interval = cfg.MaxPollInterval
 		} else {
 			s.adjustInterval(cfg, duration)
