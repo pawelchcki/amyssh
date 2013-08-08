@@ -3,16 +3,25 @@ package amyssh
 import "time"
 
 var DefaultConfig = Config{
-	DatabaseConfig{"localhost", 3306, "root", "", "amyssh"},
-	[]UsersConfig{
-		UsersConfig{"deployer", []string{"deploy", "admin"}, []string{}},
+	Database: DatabaseConfig{
+		Host:     "localhost",
+		Port:     3306,
+		User:     "root",
+		Password: "",
+		DbName:   "amyssh"},
+	Users: []UsersConfig{
+		UsersConfig{
+			Name: "deployer",
+			Tags: []string{"deploy", "admin"},
+			Keys: []string{},
+		},
 	},
-	[]string{"default"},
-	100 * time.Millisecond,
-	10000 * time.Millisecond,
-	100 * time.Millisecond, // Interval will be decreased if whole operation will take less than this
-	200 * time.Millisecond, // Backoff threshold
-	"authorized_keys2",
+	HostTags:               []string{"default"},
+	MinPollInterval:        100 * time.Millisecond,
+	MaxPollInterval:        1200 * time.Millisecond,
+	PerformanceThreshold:   100 * time.Millisecond, // Interval will be decreased if whole operation will take less than this
+	BackoffThreshold:       200 * time.Millisecond, // Backoff threshold
+	AuthorizedKeysFileName: "authorized_keys2",
 }
 
 type DatabaseConfig struct {

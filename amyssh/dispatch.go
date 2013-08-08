@@ -1,17 +1,10 @@
 package amyssh
 
 import (
-	"fmt"
+	"log"
 	"math/rand"
 	"time"
 )
-
-var _ = fmt.Println
-
-func operation(cfg *Config) {
-	time.Sleep(time.Duration(rand.Intn(130)) * time.Millisecond)
-	// fmt.Printf("%d\n", time.Duration(rand.Intn(110))*time.Millisecond)
-}
 
 type sleepSchedule struct {
 	interval      time.Duration
@@ -49,18 +42,30 @@ func (s *sleepSchedule) adjustInterval(cfg *Config, duration time.Duration) {
 	}
 }
 
-func DispatchLoop(cfg *Config, fn func(cfg *Config) error) {
-	s := sleepSchedule{cfg.MaxPollInterval, 100 * time.Millisecond}
+func timeFuzz(maxFuzz time.Duration) time.Duration {
+	return time.Duration(rand.Int63n(int64(maxFuzz)))
+}
+
+func IntervalLoop(cfg *Config, fn func(cfg *Config) error) {
+	s := sleepSchedule{
+		interval:      cfg.MaxPollInterval,
+		intervalDelta: 100 * time.Millisecond,
+	}
 
 	for {
 		// Measure operation time
 		start := time.Now()
 		err := fn(cfg)
 		duration := time.Since(start)
-		s.adjustInterval(cfg, duration)
+
+		if err != nil {
+			log.Printf("operation returned error: %+v\n", err)
+			s.interval = cfg.MaxPollInterval
+		} else {
+			s.adjustInterval(cfg, duration)
+		}
 
 		// sleep
-		fuzz := time.Duration(rand.Int63n(100)) * time.Millisecond
-		time.Sleep(s.interval + fuzz)
+		time.Sleep(s.interval + timeFuzz(100*time.Millisecond))
 	}
 }
