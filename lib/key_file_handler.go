@@ -1,6 +1,7 @@
 package amyssh
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -97,37 +98,49 @@ func writeTempKey(userName string, keySet map[string]struct{}) (*os.File, error)
 	return f, nil
 }
 
-func fileDataChanged(filePath string, keySet map[string]struct{}) bool {
+func fileNeedsUpdate(filePath string, keySet map[string]struct{}) (bool, error) {
+	_, err := os.Stat(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return true, nil // file doesn't exist we need update
+		} else {
+			return false, err
+		}
+	}
 	f, err := os.Open(filePath)
 	if err != nil {
-		return true
+		return false, err
 	}
-	defer f.Close()
 
-	line := ""
+	defer f.Close()
 	visitedKeys := make(map[string]struct{})
 	numOfKeys := len(keySet)
 
-	for _, err := fmt.Fscanln(f, &line); err == nil; _, err = fmt.Fscanln(f, &line) {
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
 		_, hasKey := keySet[line]
 		if hasKey {
 			_, hasKey := visitedKeys[line]
 			if hasKey {
-				return true
+				return true, nil
 			}
 			visitedKeys[line] = struct{}{}
 		} else {
-			return true
+			return true, nil
 		}
 		if len(visitedKeys) > numOfKeys {
-			return true
+			return true, nil
 		}
 	}
+	if err := scanner.Err(); err != nil {
+		return false, err
+	}
 	if len(visitedKeys) != numOfKeys {
-		return true
+		return true, nil
 	}
 
-	return false
+	return false, nil
 }
 
 func backupAndSubstitute(keyFileName, tmpFileName string) error {
@@ -157,8 +170,10 @@ func processKey(cfg *Config, userName string, keysMap map[string][]string, userD
 	}
 
 	keySet := generateKeySet(userData, keysMap)
+
 	authorizedKeysFilepath := filepath.Join(user.HomeDir, ".ssh", cfg.AuthorizedKeysFileName)
-	if !fileDataChanged(authorizedKeysFilepath, keySet) {
+	update, err := fileNeedsUpdate(authorizedKeysFilepath, keySet)
+	if !update {
 		return nil //file doesn't need changes skip
 	}
 	f, err := writeTempKey(userData.Name, keySet)
