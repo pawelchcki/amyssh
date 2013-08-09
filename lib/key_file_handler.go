@@ -50,13 +50,13 @@ func chown(path string, user *os_user.User) error {
 }
 
 func convertUidGid(user *os_user.User) (uid, gid int, err error) {
-	uid0, err := strconv.ParseInt(user.Uid, 10, 0)
-	uid = int(uid0)
+	uid64, err := strconv.ParseInt(user.Uid, 10, 0)
+	uid = int(uid64)
 	if err != nil {
 		return
 	}
-	gid0, err := strconv.ParseInt(user.Uid, 10, 0)
-	gid = int(gid0)
+	gid64, err := strconv.ParseInt(user.Gid, 10, 0)
+	gid = int(gid64)
 	return
 }
 
