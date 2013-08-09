@@ -61,7 +61,7 @@ func convertUidGid(user *os_user.User) (uid, gid int, err error) {
 	return
 }
 
-func generateKeySet(userData *UsersConfig, keysMap map[string][]string) map[string]struct{} {
+func generateKeySet(userData *UsersConfig, keysMap map[string][]string) StringSet {
 	keySet := SetFromList(nil, userData.Keys)
 	for _, userTag := range userData.Tags {
 		keys := keysMap[userTag]
@@ -72,7 +72,7 @@ func generateKeySet(userData *UsersConfig, keysMap map[string][]string) map[stri
 	return keySet
 }
 
-func writeTempKey(userName string, keySet map[string]struct{}) (*os.File, error) {
+func writeTempKey(userName string, keySet StringSet) (*os.File, error) {
 	f, err := ioutil.TempFile("", fmt.Sprintf("amyssh-%s.", userName))
 	if err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func writeTempKey(userName string, keySet map[string]struct{}) (*os.File, error)
 	return f, nil
 }
 
-func fileNeedsUpdate(filePath string, keySet map[string]struct{}) (bool, error) {
+func fileNeedsUpdate(filePath string, keySet StringSet) (bool, error) {
 	_, err := os.Stat(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -113,7 +113,7 @@ func fileNeedsUpdate(filePath string, keySet map[string]struct{}) (bool, error) 
 	}
 
 	defer f.Close()
-	visitedKeys := make(map[string]struct{})
+	visitedKeys := make(StringSet)
 	numOfKeys := len(keySet)
 
 	scanner := bufio.NewScanner(f)

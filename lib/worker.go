@@ -3,7 +3,7 @@ package amyssh
 import ()
 
 func processUsers(cfg *Config) ([]string, map[string]*UsersConfig) {
-	tagSet := make(map[string]struct{})
+	tagSet := make(StringSet)
 	userNameMap := make(map[string]*UsersConfig)
 	for _, user := range cfg.Users {
 		tagSet = SetFromList(tagSet, user.Tags)
