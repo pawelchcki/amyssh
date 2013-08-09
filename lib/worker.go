@@ -1,13 +1,6 @@
 package amyssh
 
-import (
-	"fmt"
-	// "math/rand"
-	// "time"
-	// "os/user"
-)
-
-var _ = fmt.Println
+import ()
 
 func processUsers(cfg *Config) ([]string, map[string]*UsersConfig) {
 	tagSet := make(map[string]struct{})

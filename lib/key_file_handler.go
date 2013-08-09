@@ -2,8 +2,8 @@ package amyssh
 
 import (
 	"fmt"
-	// "math/rand"
 	"io/ioutil"
+	"log"
 	"os"
 	os_user "os/user"
 	"path/filepath"
@@ -43,7 +43,7 @@ func chown(path string, user *os_user.User) error {
 		return err
 	}
 	err = os.Chown(path, uid, gid)
-	if err != nil && false { //todo fatality
+	if err != nil {
 		return err
 	}
 	return nil
@@ -73,15 +73,23 @@ func generateKeySet(userData *UsersConfig, keysMap map[string][]string) map[stri
 
 func writeTempKey(userName string, keySet map[string]struct{}) (*os.File, error) {
 	f, err := ioutil.TempFile("", fmt.Sprintf("amyssh-%s.", userName))
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("writing %d unique keys", len(keySet))
+	defer func() {
+		f.Close()
+		if err != nil {
+			os.Remove(f.Name())
+		}
+	}()
+
 	for key, _ := range keySet {
 		_, err := fmt.Fprintln(f, key)
 		if err != nil {
-			f.Close()
-			os.Remove(f.Name())
 			return nil, err
 		}
 	}
-	err = f.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -125,8 +133,10 @@ func fileDataChanged(filePath string, keySet map[string]struct{}) bool {
 func backupAndSubstitute(keyFileName, tmpFileName string) error {
 	_, err := os.Stat(keyFileName)
 	if !os.IsNotExist(err) {
+		backupFileName := fmt.Sprintf("%s-%s", keyFileName, time.Now().Format("060102150405.000"))
+		log.Printf("saving backup file: %s", backupFileName)
 		//TODO: copy instead of rename to be extra safe
-		err := os.Rename(keyFileName, fmt.Sprintf("%s-%s", keyFileName, time.Now().Format("060102150405.000")))
+		err := os.Rename(keyFileName, backupFileName)
 		if err != nil {
 			os.Remove(tmpFileName)
 		}
@@ -136,6 +146,7 @@ func backupAndSubstitute(keyFileName, tmpFileName string) error {
 		os.Remove(tmpFileName)
 		return err
 	}
+	log.Printf("saved keys to: %s", keyFileName)
 	return nil
 }
 

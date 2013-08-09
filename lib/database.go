@@ -49,13 +49,8 @@ type KeyData struct {
 }
 
 func (con *Connection) FetchKeys(hostTags []string, userTags []string) (keys map[string][]string, err error) {
-	// hostTags := []string{"all", "s-rt", "staging"}
-
-	// typeParam := "host"
-
 	// TODO: find better way to use prepared statement escaping
-	// params := append(hostTags, userTags...)
-	// paramsLen :=len(hostTags)+len(userTags)
+
 	hostLen := len(hostTags)
 	params := make([]interface{}, hostLen+len(userTags))
 	for i, v := range hostTags {
@@ -84,8 +79,4 @@ func (con *Connection) FetchKeys(hostTags []string, userTags []string) (keys map
 		userKeys[userLabel] = append(userKeys[userLabel], key)
 	}
 	return userKeys, nil
-}
-
-func Show(v interface{}) {
-	fmt.Printf("%+v\n", v)
 }

@@ -17,11 +17,12 @@ var DefaultConfig = Config{
 		},
 	},
 	HostTags:               []string{"default"},
-	MinPollInterval:        100 * time.Millisecond,
-	MaxPollInterval:        10000 * time.Millisecond,
-	PerformanceThreshold:   100 * time.Millisecond, // Interval will be decreased if whole operation will take less than this
-	BackoffThreshold:       200 * time.Millisecond, // Backoff threshold
+	MinPollInterval:        500 * time.Millisecond,
+	MaxPollInterval:        10 * time.Second,
+	PerformanceThreshold:   5 * time.Millisecond,  // Interval will be decreased if whole operation will take less than this
+	BackoffThreshold:       20 * time.Millisecond, // Backoff threshold
 	AuthorizedKeysFileName: "authorized_keys2",
+	LogFilePath:            "",
 }
 
 type DatabaseConfig struct {
@@ -31,11 +32,13 @@ type DatabaseConfig struct {
 	Password string
 	DbName   string
 }
+
 type UsersConfig struct {
 	Name string
 	Tags []string
 	Keys []string
 }
+
 type Config struct {
 	Database        DatabaseConfig
 	Users           []UsersConfig
@@ -47,4 +50,5 @@ type Config struct {
 	BackoffThreshold     time.Duration
 
 	AuthorizedKeysFileName string
+	LogFilePath            string
 }

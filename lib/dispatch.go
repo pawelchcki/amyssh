@@ -23,7 +23,7 @@ func (s *sleepSchedule) adjustInterval(cfg *Config, duration time.Duration) {
 		if s.intervalDelta < 20*time.Second {
 			s.intervalDelta = s.intervalDelta * 2
 		} else {
-			s.intervalDelta = 20 * time.Second
+			s.intervalDelta = cfg.MaxPollInterval / 2
 		}
 
 	case duration > cfg.PerformanceThreshold:
@@ -31,7 +31,7 @@ func (s *sleepSchedule) adjustInterval(cfg *Config, duration time.Duration) {
 		if s.intervalDelta > 100*time.Millisecond {
 			s.intervalDelta = s.intervalDelta / 2
 		} else {
-			s.intervalDelta = 100 * time.Millisecond
+			s.intervalDelta = cfg.MinPollInterval / 2
 		}
 	}
 	if s.interval < cfg.MinPollInterval {
@@ -49,7 +49,7 @@ func timeFuzz(maxFuzz time.Duration) time.Duration {
 func IntervalLoop(cfg *Config, fn func(cfg *Config) error) {
 	s := sleepSchedule{
 		interval:      cfg.MaxPollInterval,
-		intervalDelta: 100 * time.Millisecond,
+		intervalDelta: cfg.MaxPollInterval / 2,
 	}
 
 	for {
@@ -57,7 +57,6 @@ func IntervalLoop(cfg *Config, fn func(cfg *Config) error) {
 		start := time.Now()
 		err := fn(cfg)
 		duration := time.Since(start)
-
 		if err != nil {
 			log.Printf("at interval %s operation took %s and returned error: <%+v>\n",
 				s.interval.String(), duration.String(), err)
@@ -67,6 +66,6 @@ func IntervalLoop(cfg *Config, fn func(cfg *Config) error) {
 		}
 
 		// sleep
-		time.Sleep(s.interval + timeFuzz(100*time.Millisecond))
+		time.Sleep(s.interval + timeFuzz(s.interval/10))
 	}
 }
