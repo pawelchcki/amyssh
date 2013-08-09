@@ -136,7 +136,7 @@ func backupAndSubstitute(keyFileName, tmpFileName string) error {
 		backupFileName := fmt.Sprintf("%s-%s", keyFileName, time.Now().Format("060102150405.000"))
 		log.Printf("saving backup file: %s", backupFileName)
 		//TODO: copy instead of rename to be extra safe
-		err := os.Rename(keyFileName, backupFileName)
+		err = os.Rename(keyFileName, backupFileName)
 		if err != nil {
 			os.Remove(tmpFileName)
 		}
@@ -165,6 +165,12 @@ func (cfg *Config) processKey(userName string, keysMap map[string][]string, user
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err != nil {
+			f.Close()
+			os.Remove(f.Name())
+		}
+	}()
 
 	err = chown(f.Name(), user)
 	if err != nil {
@@ -173,13 +179,11 @@ func (cfg *Config) processKey(userName string, keysMap map[string][]string, user
 
 	err = ensureSshDirExists(user)
 	if err != nil {
-		os.Remove(f.Name())
 		return err
 	}
 
 	err = backupAndSubstitute(authorizedKeysFilepath, f.Name())
 	if err != nil {
-		os.Remove(f.Name())
 		return err
 	}
 
