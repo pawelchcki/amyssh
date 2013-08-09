@@ -2,6 +2,12 @@ package amyssh
 
 import ()
 
+type processedData struct {
+	uniqueUserTags []string
+	userTagMap     map[string]*UsersConfig
+	uniqueHostTags []string
+}
+
 func processUsers(cfg *Config) ([]string, map[string]*UsersConfig) {
 	tagSet := make(StringSet)
 	userNameMap := make(map[string]*UsersConfig)
@@ -19,10 +25,14 @@ func processHostTags(cfg *Config) []string {
 }
 
 var globalConnection *Connection
+var globalData *processedData
 
 func Perform(cfg *Config) error {
-	userTags, userMap := processUsers(cfg)
-	hostTags := processHostTags(cfg)
+	if globalData == nil {
+		globalData = &processedData{}
+		globalData.uniqueUserTags, globalData.userTagMap = processUsers(cfg)
+		globalData.uniqueHostTags = processHostTags(cfg)
+	}
 	var err error
 	if globalConnection == nil {
 		globalConnection, err = NewCon(cfg)
@@ -30,10 +40,11 @@ func Perform(cfg *Config) error {
 	if err != nil {
 		return err
 	}
-	keyMap, err := globalConnection.FetchKeys(hostTags, userTags)
+	keyMap, err := globalConnection.FetchKeys(globalData.uniqueHostTags,
+		globalData.uniqueUserTags)
 	if err != nil {
 		return err
 	}
 
-	return ProcessKeys(cfg, keyMap, userMap)
+	return ProcessKeys(cfg, keyMap, globalData.userTagMap)
 }
