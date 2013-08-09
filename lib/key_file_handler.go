@@ -150,7 +150,7 @@ func backupAndSubstitute(keyFileName, tmpFileName string) error {
 	return nil
 }
 
-func (cfg *Config) processKey(userName string, keysMap map[string][]string, userData *UsersConfig) error {
+func processKey(cfg *Config, userName string, keysMap map[string][]string, userData *UsersConfig) error {
 	user, err := os_user.Lookup(userName)
 	if err != nil {
 		return err
@@ -193,7 +193,7 @@ func (cfg *Config) processKey(userName string, keysMap map[string][]string, user
 func ProcessKeys(cfg *Config, keysMap map[string][]string, userMap map[string]*UsersConfig) error {
 	var lastError error
 	for user, userData := range userMap {
-		lastError = cfg.processKey(user, keysMap, userData)
+		lastError = processKey(cfg, user, keysMap, userData)
 	}
 	return lastError
 }
