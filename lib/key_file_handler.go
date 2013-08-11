@@ -61,12 +61,12 @@ func convertUidGid(user *os_user.User) (uid, gid int, err error) {
 	return
 }
 
-func generateKeySet(userData *UsersConfig, keysMap map[string][]string) StringSet {
-	keySet := SetFromList(nil, userData.Keys)
+func generateKeySet(userData *UsersConfig, keysMap map[string]StringSet) StringSet {
+	keySet := NewSetFromList(userData.Keys)
 	for _, userTag := range userData.Tags {
 		keys := keysMap[userTag]
 		if keys != nil {
-			keySet = SetFromList(keySet, keys)
+			keySet.Union(keys)
 		}
 	}
 	return keySet
@@ -163,7 +163,7 @@ func backupAndSubstitute(keyFileName, tmpFileName string) error {
 	return nil
 }
 
-func processKey(cfg *Config, userName string, keysMap map[string][]string, userData *UsersConfig) error {
+func processKey(cfg *Config, userName string, keysMap map[string]StringSet, userData *UsersConfig) error {
 	user, err := os_user.Lookup(userName)
 	if err != nil {
 		return err
@@ -205,7 +205,7 @@ func processKey(cfg *Config, userName string, keysMap map[string][]string, userD
 	return nil
 }
 
-func ProcessKeys(cfg *Config, keysMap map[string][]string, userMap map[string]*UsersConfig) error {
+func ProcessKeys(cfg *Config, keysMap map[string]StringSet, userMap map[string]*UsersConfig) error {
 	var lastError error
 	for user, userData := range userMap {
 		lastError = processKey(cfg, user, keysMap, userData)

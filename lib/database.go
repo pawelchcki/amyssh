@@ -48,7 +48,7 @@ func generatePlaceholder(count int) string {
 type KeyData struct {
 }
 
-func (con *Connection) FetchKeys(hostTags []string, userTags []string) (keys map[string][]string, err error) {
+func (con *Connection) FetchKeys(hostTags []string, userTags []string) (keys map[string]StringSet, err error) {
 	// TODO: find better way to use prepared statement escaping
 
 	hostLen := len(hostTags)
@@ -70,13 +70,16 @@ func (con *Connection) FetchKeys(hostTags []string, userTags []string) (keys map
 		return nil, err
 	}
 
-	//TODO: optimize memory usage ?
-	userKeys := make(map[string][]string)
+	userKeys := make(map[string]StringSet)
 
 	var id, key, userLabel string
 	for row.Next() {
 		row.Scan(&id, &key, &userLabel)
-		userKeys[userLabel] = append(userKeys[userLabel], key)
+		if userKeys[userLabel] == nil {
+			userKeys[userLabel] = make(StringSet)
+		}
+
+		userKeys[userLabel][key] = struct{}{}
 	}
 	return userKeys, nil
 }
