@@ -98,51 +98,6 @@ func writeTempKey(userName string, keySet StringSet) (*os.File, error) {
 	return f, nil
 }
 
-func fileNeedsUpdate(filePath string, keySet StringSet) (bool, error) {
-	_, err := os.Stat(filePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return true, nil // file doesn't exist we need update
-		} else {
-			return false, err
-		}
-	}
-	f, err := os.Open(filePath)
-	if err != nil {
-		return false, err
-	}
-
-	defer f.Close()
-	visitedKeys := make(StringSet)
-	numOfKeys := len(keySet)
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_, hasKey := keySet[line]
-		if hasKey {
-			_, hasKey := visitedKeys[line]
-			if hasKey {
-				return true, nil
-			}
-			visitedKeys[line] = struct{}{}
-		} else {
-			return true, nil
-		}
-		if len(visitedKeys) > numOfKeys {
-			return true, nil
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return false, err
-	}
-	if len(visitedKeys) != numOfKeys {
-		return true, nil
-	}
-
-	return false, nil
-}
-
 func backupAndSubstitute(keyFileName, tmpFileName string) error {
 	_, err := os.Stat(keyFileName)
 	if !os.IsNotExist(err) {
@@ -161,6 +116,128 @@ func backupAndSubstitute(keyFileName, tmpFileName string) error {
 	}
 	log.Printf("saved keys to: %s", keyFileName)
 	return nil
+}
+
+type fileInfoCacheEntry struct {
+	fileKeySet StringSet
+	fileInfo   os.FileInfo
+}
+
+type fileInfoCacheType map[string]*fileInfoCacheEntry
+
+var fileInfoCache fileInfoCacheType
+
+func init() {
+	fileInfoCache = make(fileInfoCacheType)
+}
+
+type duplicatedEntryError struct {
+	entry string
+}
+
+func (e *duplicatedEntryError) Error() string {
+	return "file had duplicated entry of: " + e.entry
+}
+
+func fileToKeySet(filePath string) (StringSet, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	keySet := make(StringSet)
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if _, hasKey := keySet[line]; hasKey {
+			return nil, &duplicatedEntryError{line}
+		}
+		keySet[line] = struct{}{}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return keySet, nil
+}
+
+func (c fileInfoCacheType) isFileChanged(filePath string) (bool, error) {
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return true, nil // file doesn't exist we need update
+		} else {
+			return false, err
+		}
+	}
+	if c[filePath] == nil {
+		fileKeySet, err := fileToKeySet(filePath)
+		if err != nil {
+			if _, ok := err.(*duplicatedEntryError); ok {
+				return true, nil
+			} else {
+				return false, err
+			}
+		}
+		c[filePath] = &fileInfoCacheEntry{
+			fileKeySet: fileKeySet,
+			fileInfo:   fileInfo,
+		}
+	} else {
+		if c[filePath].fileInfo.ModTime() != fileInfo.ModTime() ||
+			c[filePath].fileInfo.Size() != fileInfo.Size() {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+func (c fileInfoCacheType) isKeySetEqual(filePath string, keySet StringSet) (bool, error) {
+	fileInfo := c[filePath]
+	if fileInfo == nil {
+		return false, nil
+	}
+	if len(fileInfo.fileKeySet) != len(keySet) {
+		return false, nil
+	}
+	for k, _ := range keySet {
+		_, hasKey := fileInfo.fileKeySet[k]
+		if !hasKey {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+func (c fileInfoCacheType) updateFileInfo(filePath string, keySet StringSet) error {
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return err
+	}
+	if c[filePath] == nil {
+		c[filePath] = &fileInfoCacheEntry{
+			fileInfo:   fileInfo,
+			fileKeySet: keySet,
+		}
+	}
+	return nil
+}
+
+func fileNeedsUpdate(filePath string, keySet StringSet) (bool, error) {
+	fileChanged, err := fileInfoCache.isFileChanged(filePath)
+	if err != nil {
+		return false, err
+	}
+	if fileChanged {
+		return true, nil
+	}
+	keySetEqual, err := fileInfoCache.isKeySetEqual(filePath, keySet)
+	if err != nil {
+		return false, err
+	}
+
+	return !keySetEqual, nil
 }
 
 func processKey(cfg *Config, userName string, keysMap map[string]StringSet, userData *UsersConfig) error {
@@ -202,6 +279,10 @@ func processKey(cfg *Config, userName string, keysMap map[string]StringSet, user
 		return err
 	}
 
+	err = fileInfoCache.updateFileInfo(authorizedKeysFilepath, keySet)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
