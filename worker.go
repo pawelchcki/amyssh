@@ -1,7 +1,5 @@
 package amyssh
 
-import ()
-
 type processedData struct {
 	uniqueUserTags []string
 	userTagMap     map[string]*UsersConfig

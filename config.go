@@ -1,6 +1,10 @@
 package amyssh
 
-import "time"
+import (
+	"time"
+
+	"github.com/pchojnacki/configurator"
+)
 
 var DefaultConfig = Config{
 	Database: DatabaseConfig{
@@ -51,4 +55,22 @@ type Config struct {
 
 	AuthorizedKeysFileName string
 	LogFilePath            string
+}
+
+var globalCachedConfig *Config
+var globalConfigurator *configurator.ConfigHolder
+
+func init() {
+	globalConfigurator = configurator.NewConfig(Config{})
+	globalConfigurator.Add("default", DefaultConfig)
+
+	// globalConfigurator.LoadFile('main', "/etc/amyssh.yml")
+	// globalConfig
+}
+
+func GetConfig() *Config {
+	if globalCachedConfig == nil {
+		globalCachedConfig = globalConfigurator.Merge([]string{"default", "main_file"}).(*Config)
+	}
+	return globalCachedConfig
 }
